@@ -13,10 +13,19 @@ import {
 
 import { WebBrowser } from 'expo';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button'
 
 import { MonoText } from '../components/StyledText';
 
 const {width, height} = Dimensions.get('window');
+
+const MAP_TYPES = {
+    STANDARD: 'standard',
+    SATELLITE: 'satellite',
+    HYBRID: 'hybrid',
+    TERRAIN: 'terrain',
+    NONE: 'none',
+};
 
 const ASPECT_RATIO = width / height;
 const LATITUDE = 37.78825;
@@ -24,6 +33,12 @@ const LONGITUDE = -122.4324;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 let id = 0;
+let markerId = 0;
+
+var radio_props = [
+    {label: "Standard", value: MAP_TYPES.STANDARD },
+    {label: "Satellite", value: MAP_TYPES.SATELLITE }
+];
 
 export default class HomeScreen extends React.Component {
     static navigationOptions = {
@@ -42,6 +57,8 @@ export default class HomeScreen extends React.Component {
             },
             polylines: [],
             editing: null,
+            markers: [],
+            mapType: 'standard'
         };
     }
 
@@ -53,6 +70,15 @@ export default class HomeScreen extends React.Component {
         });
     }
 
+    onPressRadio(value) {
+        this.setState({mapType:value});
+    }
+
+    clearPolyline() {
+        this.setState({polylines: []});
+        this.setState({markers: []});
+    }
+
     onPress(e) {
         const { editing } = this.state;
         if (!editing) {
@@ -61,6 +87,13 @@ export default class HomeScreen extends React.Component {
                     id: id++,
                     coordinates: [e.nativeEvent.coordinate],
                 },
+                markers: [
+                    ...this.state.markers,
+                    {
+                        coordinate: e.nativeEvent.coordinate,
+                        key: `Marker${markerId++}`,
+                    },
+                ],
             });
         } else {
             this.setState({
@@ -71,6 +104,13 @@ export default class HomeScreen extends React.Component {
                         e.nativeEvent.coordinate,
                     ],
                 },
+                markers: [
+                    ...this.state.markers,
+                    {
+                        coordinate: e.nativeEvent.coordinate,
+                        key: `Marker${markerId++}`,
+                    },
+                ],
             });
         }
     }
@@ -80,10 +120,10 @@ export default class HomeScreen extends React.Component {
         return (
             <View style={styles.container}>
               <MapView
+                  mapType={this.state.mapType}
                   provider={this.props.provider}
                   style={styles.map}
                   initialRegion={this.state.region}
-                  scrollEnabled={false}
                   onPress={e => this.onPress(e)}
               >
                   {this.state.polylines.map(polyline => (
@@ -94,8 +134,17 @@ export default class HomeScreen extends React.Component {
                           fillColor="rgba(255,0,0,0.5)"
                           strokeWidth={1}
                       />
+                  ))
+                  }
+                  {this.state.markers.map(marker => (
+                      <MapView.Marker
+                          title={marker.key}
+                          key={marker.key}
+                          coordinate={marker.coordinate}
+                      />
                   ))}
                   {this.state.editing &&
+
                   <MapView.Polyline
                       key="editingPolyline"
                       coordinates={this.state.editing.coordinates}
@@ -114,46 +163,32 @@ export default class HomeScreen extends React.Component {
                         <Text>Finish</Text>
                       </TouchableOpacity>
                   )}
+                  <RadioForm
+                      radio_props={radio_props}
+                      initial={0}
+                      onPress={(value) => {this.onPressRadio(value)}}
+                      style={[styles.bubble, styles.radio]}
+                  />
+                  <TouchableOpacity
+                      onPress={() => this.clearPolyline()}
+                      style={[styles.bubble, styles.button]}
+                  >
+                      <Text>Clear</Text>
+                  </TouchableOpacity>
               </View>
             </View>
         );
     }
 
-  _maybeRenderDevelopmentModeWarning() {
-    if (__DEV__) {
-      const learnMoreButton = (
-        <Text onPress={this._handleLearnMorePress} style={styles.helpLinkText}>
-          Learn more
-        </Text>
-      );
-
-      return (
-        <Text style={styles.developmentModeText}>
-          Development mode is enabled, your app will be slower but you can use useful development
-          tools. {learnMoreButton}
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={styles.developmentModeText}>
-          You are not in development mode, your app will run at full speed.
-        </Text>
-      );
-    }
-  }
-
-  _handleLearnMorePress = () => {
-    WebBrowser.openBrowserAsync('https://docs.expo.io/versions/latest/guides/development-mode');
-  };
-
-  _handleHelpPress = () => {
-    WebBrowser.openBrowserAsync(
-      'https://docs.expo.io/versions/latest/guides/up-and-running.html#can-t-see-your-changes'
-    );
-  };
 }
 
 const styles = StyleSheet.create({
+    radio: {
+        width: 120,
+        paddingHorizontal: 12,
+        alignItems: 'flex-start',
+        marginHorizontal: 10,
+    },
     container: {
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'flex-end',
