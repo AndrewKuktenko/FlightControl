@@ -1,6 +1,11 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Picker } from 'react-native';
-import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button'
+import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as setMapType from '../actions/setMapType'
+
+
 const MAP_TYPES = {
     STANDARD: 'standard',
     SATELLITE: 'satellite',
@@ -16,8 +21,7 @@ var radio_props = [
 
 
 
-
-export default class LinksScreen extends React.Component {
+class LinksScreen extends React.Component {
   static navigationOptions = {
     title: 'Options',
   };
@@ -28,17 +32,35 @@ export default class LinksScreen extends React.Component {
 
 
   render() {
+    const { setMapType } = this.props.setMapType;
     return (
       <ScrollView style={styles.container}>
         <RadioForm
             radio_props={radio_props}
             initial={0}
-            onPress={(value) => {this.onPress(value)}}
+            onPress={(value) => { 
+              setMapType(value);
+            }} 
         />
       </ScrollView>
     );
   }
 }
+
+function mapStateToProps (state) {
+  return {
+      mapType: state.states.mapType
+  }
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    setMapType: bindActionCreators(setMapType, dispatch)
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(LinksScreen);
+
 
 const styles = StyleSheet.create({
   container: {

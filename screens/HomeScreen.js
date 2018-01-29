@@ -14,7 +14,9 @@ import {
 import { WebBrowser } from 'expo';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button'
-
+import { BindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+ 
 import { MonoText } from '../components/StyledText';
 
 const {width, height} = Dimensions.get('window');
@@ -35,12 +37,7 @@ const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 let id = 0;
 let markerId = 0;
 
-var radio_props = [
-    {label: "Standard", value: MAP_TYPES.STANDARD },
-    {label: "Satellite", value: MAP_TYPES.SATELLITE }
-];
-
-export default class HomeScreen extends React.Component {
+class HomeScreen extends React.Component {
     static navigationOptions = {
         title: 'Map',
     };
@@ -58,7 +55,7 @@ export default class HomeScreen extends React.Component {
             polylines: [],
             editing: null,
             markers: [],
-            mapType: 'standard'
+            mapType: this.props.mapType
         };
     }
 
@@ -70,16 +67,13 @@ export default class HomeScreen extends React.Component {
         });
     }
 
-    onPressRadio(value) {
-        this.setState({mapType:value});
-    }
-
     clearPolyline() {
         this.setState({polylines: []});
         this.setState({markers: []});
     }
 
     onPress(e) {
+        
         const { editing } = this.state;
         if (!editing) {
             this.setState({
@@ -120,7 +114,7 @@ export default class HomeScreen extends React.Component {
         return (
             <View style={styles.container}>
               <MapView
-                  mapType={this.state.mapType}
+                  mapType={this.props.mapType}
                   provider={this.props.provider}
                   style={styles.map}
                   initialRegion={this.state.region}
@@ -163,12 +157,6 @@ export default class HomeScreen extends React.Component {
                         <Text>Finish</Text>
                       </TouchableOpacity>
                   )}
-                  <RadioForm
-                      radio_props={radio_props}
-                      initial={0}
-                      onPress={(value) => {this.onPressRadio(value)}}
-                      style={[styles.bubble, styles.radio]}
-                  />
                   <TouchableOpacity
                       onPress={() => this.clearPolyline()}
                       style={[styles.bubble, styles.button]}
@@ -179,8 +167,20 @@ export default class HomeScreen extends React.Component {
             </View>
         );
     }
+    
 
-}
+};
+
+function mapStateToProps (state) {
+    return {
+        mapType: state.states.mapType
+    }
+};
+
+export default connect(mapStateToProps)(HomeScreen);
+
+
+
 
 const styles = StyleSheet.create({
     radio: {
