@@ -70,6 +70,7 @@ class HomeScreen extends React.Component {
     clearPolyline() {
         this.setState({polylines: []});
         this.setState({markers: []});
+        this.setState({editing: null});
     }
 
     onPress(e) {
